@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+G:/ComputerScience/C/CS205/Assignment2/BigNumber.h
+string
+-
+
+G:/ComputerScience/C/CS205/Assignment2/main.cpp
+iostream
+-
+stack
+-
+string
+-
+exception
+-
+cmath
+-
+BigNumber.h
+G:/ComputerScience/C/CS205/Assignment2/BigNumber.h
+
