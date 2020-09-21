@@ -108,32 +108,6 @@ public:
     }
 };
 
-int main2(){
-    /*int a=0;
-    CBigNumber c1("121.11");
-    CBigNumber c2("1.4");
-    //string c1s=c1.toString();
-    CBigNumber c3=c1+c2;
-    CBigNumber c5=c1-c2;
-    //CBigNumber c4=c1/c2;
-   // string asd=((CBigNumber("14"))*(CBigNumber("12111"))).toString();
-    a=3;
-    CBigNumber c6=c1/c2;
-    cout <<
-         //(CBigNumber("0")+CBigNumber("4")).toString() << endl <<
-    c6.toString() << endl <<
-   // asd << endl <<
-    //c6.toString() << endl <<
-    //c4.toString() << endl
-    endl;
-     */
-    string cc="507142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857\n"
-              "142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857\n"
-              "142857142857142";
-    cout << cc.length();
-    return 0;
-}
-
 int main() {
     cout << "welcome to the calculator" << endl;
     while (true) {

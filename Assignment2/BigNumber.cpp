@@ -137,11 +137,11 @@ void CBigNumber::moveDecimalPoint(int num) {
         }
         for (int i = 0; i < -num; ++i) {
             char c;
-            if (intDigs>0){
-                c=intStr.at(intDigs-1);
-            } else {
-                c='0';
+            if (intDigs<1){
+                intDigs=1;
+                intStr="0";
             }
+            c=intStr.at(intDigs-1);
             intStr.replace(intDigs-1,1,"");
             intDigs-=intDigs>0?1:0;
             if (decDigs==0){
