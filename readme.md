@@ -3,6 +3,6 @@ This repository contains the released assignments for the fall 2020 [CS205](http
 
 * [Assignment1-simple multiply](https://github.com/ASSANDHOLE/CS205/tree/master/Assignment1) Simple program just to multiply to doubles
 
-* [Assignment2-complex calculator](https://github.com/ASSANDHOLE/CS205/tree/master/Assignment2) A calculator that has a lot of functions
+* [Assignment2-multifunctional calculator](https://github.com/ASSANDHOLE/CS205/tree/master/Assignment2) A calculator that has a lot of functions
 
 * _to be continue..._
