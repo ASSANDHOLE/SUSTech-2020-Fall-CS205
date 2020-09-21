@@ -41,19 +41,23 @@ void clearStorage();
 
 void bigNumberMode();
 
+/* store variables with name and value */
 struct Var {
     string name;
     string value;
 };
+// the max variable number
 const int MAX = 100;
 const int INIT_VAR = 1;
 const int CALC = 2;
-stack<double> numStack;
-stack<CBigNumber> bigNumStack;
-stack<char> symStack;
+stack<double> numStack; /* NOLINT */
+stack<CBigNumber> bigNumStack; /* NOLINT */
+stack<char> symStack; /* NOLINT */
+//variables
 Var vars[MAX];
+//number of variables
 int varNums = 0;
-string functionNames[9] = {
+string functionNames[9] = { /* NOLINT */
         "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh", "log", "logTen"
 };
 
@@ -71,8 +75,14 @@ public:
     }
 };
 
+/* handle input functions */
 class CFunctions {
 public:
+    /**
+     * check if the (@param varName) is in the "string functionName[]"
+     * @param varName the name of the function to check
+     * @return return the number of the position of the name in the list. -1 if not in
+     */
     static int checkName(string &varName) {
         for (int i = 0; i < 9; ++i) {
             if (varName == functionNames[i]) {
@@ -82,6 +92,12 @@ public:
         return -1;
     }
 
+    /**
+     * calculate by function and value
+     * @param funcNum the return number of "check(string &)"
+     * @param value the value to be calculated
+     * @return the ans, the same as (@param value) if (@param funcNum) == -1
+     */
     static double proceed(int funcNum, double value) {
         switch (funcNum) {
             case 0:
@@ -128,9 +144,9 @@ int main() {
         } else if (expression == "for" || expression == "FOR") {
             forStatement();
             continue;
-        } else if (expression == "large"||expression=="accurate"||
-        expression=="big number"|| expression=="accurate number"||
-        expression=="BIG"||expression=="big"){
+        } else if (expression == "large" || expression == "accurate" ||
+                   expression == "big number" || expression == "accurate number" ||
+                   expression == "BIG" || expression == "big") {
             bigNumberMode();
             continue;
         }
@@ -143,7 +159,7 @@ int main() {
                 numStack = stack<double>();
                 symStack = stack<char>();
             }
-        }  catch (CInputTypeErrorExc &e) {
+        } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl;
             continue;
         } catch (CInitVarErrorExc &e) {
@@ -151,7 +167,7 @@ int main() {
             continue;
         } catch (exception &e) {
             cout << e.what() << endl;
-            cout << "sorry, but the storage must be cleared" << endl;
+            cout << "sorry, but all the storage has been cleared" << endl;
             clearStorage();
             continue;
         }
@@ -166,6 +182,10 @@ int getType(string &in) {
     return CALC;
 }
 
+/**
+ * initialize variable, change variable value if the variable is previously defined
+ * @param exp full expression
+ */
 void initVar(string &exp) {
     string toInit;
     removeSpace(exp);
@@ -207,7 +227,10 @@ void initVar(string &exp) {
     }
 }
 
-void initVarN(string &exp){
+/**
+ * initVar(string &) in big number mode
+ */
+void initVarN(string &exp) {
     string toInit;
     removeSpace(exp);
     int pos = exp.find('=');
@@ -248,6 +271,9 @@ void initVarN(string &exp){
     }
 }
 
+/**
+ * print all variables
+ */
 void listVars() {
     if (varNums > 0) {
         for (int i = 0; i < varNums; ++i) {
@@ -258,6 +284,10 @@ void listVars() {
     }
 }
 
+/**
+ * change the variable name to it's value in the expression
+ * @param exp full expression
+ */
 void exchangeVar(string &exp) {
     if (exp.empty()) {
         return;
@@ -294,13 +324,17 @@ void exchangeVar(string &exp) {
     }
 }
 
-bool check(string in) {
-    if (in.empty()) {
+/**
+ * check if the expression is calculable
+ * @param exp expression with a "=" at the end
+ */
+bool check(string exp) {
+    if (exp.empty()) {
         return false;
     }
     stack<char> stackC;
     int check = 0;
-    for (char c : in) {
+    for (char c : exp) {
         if (!(isNumber(c) || '(' == c || ')' == c || '+' == c
               || '-' == c || '*' == c || '/' == c || '=' == c)) {
             return false;
@@ -324,7 +358,7 @@ bool check(string in) {
     if (!stackC.empty()) {
         return false;
     }
-    if ('=' != in.at(in.length() - 1)) {
+    if ('=' != exp.at(exp.length() - 1)) {
         return false;
     }
     return true;
@@ -337,6 +371,11 @@ bool isNumber(char c) {
     return false;
 }
 
+/**
+ * solve expression with functions in expression, variables are not accepted
+ * @param funcNum could get by "CFunction::check(string &)", should be -1 at beginning
+ * @return the final answer as string
+ */
 string solveFunc(int funcNum, string exp) {
     if (exp.empty()) {
         return exp;
@@ -380,6 +419,10 @@ string solveFunc(int funcNum, string exp) {
     }
 }
 
+/**
+ * calculate the calculable expression, no function and variable accepted
+ * @return the answer
+ */
 double calculate(string exp) {
     removeSpace(exp);
     int isPureNum = 1;
@@ -442,7 +485,11 @@ double calculate(string exp) {
     return numStack.top();
 }
 
-CBigNumber calculateN(string exp){
+/**
+ * calculate(string) in big number mode
+ * @return the answer in CBigNumber
+ */
+CBigNumber calculateN(string exp) {
     removeSpace(exp);
     int isPureNum = 1;
     for (char cc:exp) {
@@ -504,6 +551,9 @@ CBigNumber calculateN(string exp){
     return bigNumStack.top();
 }
 
+/**
+ * replace -123... by 0-123... and ...(-123... by ...(0-123...
+ */
 void addZero(string &str) {
     char pre = str.at(0);
     if (pre == '-') {
@@ -554,7 +604,7 @@ void forStatement() {
         }
     }
     for (int i = 0; i < ((end - start) / step) + 1; ++i) {
-        string tempExp=exp;
+        string tempExp = exp;
         try {
             string str = var + "=" + to_string(start + i * step);
             initVar(str);
@@ -575,6 +625,9 @@ void forStatement() {
     varNums--;
 }
 
+/**
+ * remove all blank space(" ") in the expression
+ */
 void removeSpace(string &str) {
     int index = 0;
     if (!str.empty()) {
@@ -584,6 +637,11 @@ void removeSpace(string &str) {
     }
 }
 
+/**
+ * compare the priority of (@param c) and the one at the top of the "symStack"
+ * @param c the target operator
+ * @return 1 if (@param c) has higher priority, 0 for the rest
+ */
 int compareOpe(char c) {
     if (symStack.empty()) {
         return 1;
@@ -601,6 +659,7 @@ int compareOpe(char c) {
         case '+':
         case '-':
         case ')':
+        //end of the expression
         case '=':
             return 0;
         default:
@@ -609,16 +668,19 @@ int compareOpe(char c) {
     return 1;
 }
 
+/**
+ * remove extra zeros at the beginning and the end of the string
+ */
 string removeExtraZeros(string str) {
     int pos = str.find('.');
     if (pos != string::npos) {
-        bool end=false;
+        bool end = false;
         while (str.at(str.length() - 1) == '0' || str.at(str.length() - 1) == '.') {
-            if (str.at(str.length() - 1) == '.'){
-                end=true;
+            if (str.at(str.length() - 1) == '.') {
+                end = true;
             }
             str.replace(str.length() - 1, 1, "");
-            if (end){
+            if (end) {
                 break;
             }
         }
@@ -626,30 +688,36 @@ string removeExtraZeros(string str) {
     return str;
 }
 
+/**
+ * clear the stacks and variables
+ */
 void clearStorage() {
     numStack = stack<double>();
-    bigNumStack=stack<CBigNumber>();
+    bigNumStack = stack<CBigNumber>();
     symStack = stack<char>();
     memset(vars, 0, sizeof(Var) * MAX);
     varNums = 0;
 }
 
-void bigNumberMode(){
+/**
+ * calculate in CBigNumber
+ */
+void bigNumberMode() {
     cout << "you are entering the big number mode, math functions are disabled. " << endl;
-    cout << "your variables won't being deleted, you should clear them manually"<< endl;
+    cout << "your variables won't being deleted, you should clear them manually" << endl;
     cout << "are you sure to get in [y/n]" << endl;
     string expression;
     do {
-        getline(cin,expression);
-        if (expression=="y"){
+        getline(cin, expression);
+        if (expression == "y") {
             cout << "you are in big number" << endl;
             break;
         }
-        if (expression=="n"){
+        if (expression == "n") {
             cout << "exit big number..." << endl;
             return;
         }
-    }while (expression!="y"&&expression!="n");
+    } while (expression != "y" && expression != "n");
     while (true) {
         getline(cin, expression);
         if (expression == "Exit" || expression == "exit" ||
@@ -682,6 +750,9 @@ void bigNumberMode(){
             continue;
         } catch (CInitVarErrorExc &e) {
             cout << CInitVarErrorExc::message() << endl;
+            continue;
+        } catch (CZeroDivideException &e) {
+            cout << e.what() << endl;
             continue;
         } catch (exception &e) {
             cout << e.what() << endl;
