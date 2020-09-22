@@ -3,4 +3,4 @@ project(Assignment2)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Assignment2 main.cpp BigNumber.cpp BigNumber.h)
+add_executable(Assignment2 main.cpp BigNumber.cpp BigNumber.h Strategies.cpp Strategies.h)

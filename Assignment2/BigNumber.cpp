@@ -44,6 +44,7 @@ int CBigNumber::length() const {
     return len;
 }
 
+/* initialize the number with string */
 void CBigNumber::strToBigNumber(string numStr) {
     init();
     int pos;
@@ -73,14 +74,14 @@ void CBigNumber::strToBigNumber(string numStr) {
         decDigs = 0;
         decStr = "";
     }
+    if (intDigs != 0 && intDigs != 1) {
+        reverse(intStr.begin(), intStr.end());
+    }
     adjustDigs();
     if (!decDigs) {
         if (!intDigs || intDigs == 1 && intStr == "0") {
             sign = 0;
         }
-    }
-    if (intDigs != 0 && intDigs != 1) {
-        reverse(intStr.begin(), intStr.end());
     }
 }
 
@@ -102,6 +103,9 @@ string CBigNumber::toString() {
     return str + '.' + decStr;
 }
 
+/**
+ * remove extra zeros
+ */
 void CBigNumber::adjustDigs() {
     if (intDigs > 1) {
         reverse(intStr.begin(), intStr.end());
@@ -123,6 +127,10 @@ void CBigNumber::adjustDigs() {
     }
 }
 
+/**
+ * move decimal point, if (@param num) < 0, move left, if > 0 move right
+ * @param num the number of moves
+ */
 void CBigNumber::moveDecimalPoint(int num) {
     if (num == 0) {
         return;
@@ -224,60 +232,62 @@ void CBigNumber::add(const CBigNumber &BN1, const CBigNumber &BN2, CBigNumber &r
         res = BN1.isZero() ? BN2 : BN1;
         return;
     }
+    //if number1 and number2 has different sign, do subtract
     if (BN1.sign != BN2.sign) {
         CBigNumber NBN2 = BN2;
         NBN2.sign = BN1.sign;
         subtract(BN1, NBN2, res);
-    } else {
-        int minDecDigs = min(BN1.decDigs, BN2.decDigs);
-        int addNum = 0;
-        string decString;
-        string intString;
-        for (int i = minDecDigs - 1; i >= 0; --i) {
-            int r = (BN1.decStr.at(i) - '0') + (BN2.decStr.at(i) - '0') + addNum;
-            addNum = r / 10;
-            decString += to_string(r % 10);
-        }
-        if (BN1.decDigs > BN2.decDigs) {
-            decString = BN1.decStr.substr(minDecDigs, BN1.decDigs - BN2.decDigs) + decString;
-            res.decDigs = BN1.decDigs;
-        } else if (BN2.decDigs > BN1.decDigs) {
-            decString = BN2.decStr.substr(minDecDigs, BN2.decDigs - BN1.decDigs) + decString;
-            res.decDigs = BN2.decDigs;
-        }
-        res.decDigs = max(BN2.decDigs, BN1.decDigs);
-        res.decStr = decString;
-        int minIntDigs = min(BN1.intDigs, BN2.intDigs);
-        for (int j = 0; j < minIntDigs; ++j) {
-            int r = (BN1.intStr.at(j) - '0') + (BN2.intStr.at(j) - '0') + addNum;
+        return;
+    }
+    int minDecDigs = min(BN1.decDigs, BN2.decDigs);
+    int addNum = 0;
+    string decString;
+    string intString;
+    for (int i = minDecDigs - 1; i >= 0; --i) {
+        int r = (BN1.decStr.at(i) - '0') + (BN2.decStr.at(i) - '0') + addNum;
+        addNum = r / 10;
+        decString += to_string(r % 10);
+    }
+    string sub;
+    if (BN1.decDigs > BN2.decDigs) {
+        sub = BN1.decStr.substr(minDecDigs, BN1.decDigs - BN2.decDigs);
+    } else if (BN2.decDigs > BN1.decDigs) {
+        sub = BN2.decStr.substr(minDecDigs, BN2.decDigs - BN1.decDigs);
+    }
+    reverse(sub.begin(),sub.end());
+    decString = sub + decString;
+    res.decDigs = max(BN2.decDigs, BN1.decDigs);
+    res.decStr = decString;
+    int minIntDigs = min(BN1.intDigs, BN2.intDigs);
+    for (int j = 0; j < minIntDigs; ++j) {
+        int r = (BN1.intStr.at(j) - '0') + (BN2.intStr.at(j) - '0') + addNum;
+        addNum = r / 10;
+        intString += to_string(r % 10);
+    }
+    if (BN1.intDigs > BN2.intDigs) {
+        for (int j = minIntDigs; j < BN1.intDigs; ++j) {
+            int r = (BN1.intStr.at(j) - '0') + addNum;
             addNum = r / 10;
             intString += to_string(r % 10);
         }
-        if (BN1.intDigs > BN2.intDigs) {
-            for (int j = minIntDigs; j < BN1.intDigs; ++j) {
-                int r = (BN1.intStr.at(j) - '0') + addNum;
-                addNum = r / 10;
-                intString += to_string(r % 10);
-            }
-        } else if (BN1.intDigs < BN2.intDigs) {
-            for (int j = minIntDigs; j < BN2.intDigs; ++j) {
-                int r = (BN2.intStr.at(j) - '0') + addNum;
-                addNum = r / 10;
-                intString += to_string(r % 10);
-            }
+    } else if (BN1.intDigs < BN2.intDigs) {
+        for (int j = minIntDigs; j < BN2.intDigs; ++j) {
+            int r = (BN2.intStr.at(j) - '0') + addNum;
+            addNum = r / 10;
+            intString += to_string(r % 10);
         }
-        res.intDigs = max(BN1.intDigs, BN2.intDigs);
-        if (addNum > 0) {
-            intString += to_string(addNum);
-            res.intDigs++;
-        }
-        res.intStr = intString;
-        if (res.decDigs != 0 && res.decDigs != 1) {
-            reverse(res.decStr.begin(), res.decStr.end());
-        }
-        res.sign = BN1.sign;
-        res.adjustDigs();
     }
+    res.intDigs = max(BN1.intDigs, BN2.intDigs);
+    if (addNum > 0) {
+        intString += to_string(addNum);
+        res.intDigs++;
+    }
+    res.intStr = intString;
+    if (res.decDigs != 0 && res.decDigs != 1) {
+        reverse(res.decStr.begin(), res.decStr.end());
+    }
+    res.sign = BN1.sign;
+    res.adjustDigs();
 }
 
 void CBigNumber::subtract(const CBigNumber &BN1, const CBigNumber &BN2, CBigNumber &res) {
@@ -292,85 +302,86 @@ void CBigNumber::subtract(const CBigNumber &BN1, const CBigNumber &BN2, CBigNumb
         res = BN1;
         return;
     }
+    //if number1 and number2 has different sign, do add
     if (BN1.sign != BN2.sign) {
         CBigNumber NBN2 = BN2;
         NBN2.sign = BN1.sign;
         add(BN1, NBN2, res);
-    } else {
-        int compared = BN1.compare(BN2);
-        if (compared == 0) {
-            return;
-        }
-        int switchSide, minDecDigs, subtract = 0;
-        switchSide = BN1.sign == 0 ? compared == -1 : compared == 1;
-        const CBigNumber *pBN1 = &BN1, *pBN2 = &BN2;
-        if (switchSide) {
-            const CBigNumber *temp = pBN1;
-            pBN1 = pBN2;
-            pBN2 = temp;
-        }
-        string decString, intString;
-        minDecDigs = min(pBN1->decDigs, pBN2->decDigs);
-        if (pBN1->decDigs < pBN2->decDigs) {
-            for (int i = pBN2->decDigs - 1; i >= pBN1->decDigs; --i) {
-                decString += to_string('9' + 1 - subtract - pBN2->decStr.at(i));
-                subtract = 1;
-            }
-        } else if (pBN1->decDigs > pBN2->decDigs) {
-            for (int i = pBN1->decDigs - 1; i >= pBN2->decDigs; --i) {
-                decString += string(1, pBN1->decStr.at(i));
-            }
-            subtract = 0;
-        }
-        for (int i = minDecDigs - 1; i >= 0; --i) {
-            if ((pBN1->decStr.at(i) - '0') - subtract < (pBN2->decStr.at(i) - '0')) {
-                int r = (pBN1->decStr.at(i) - pBN2->decStr.at(i)) - subtract + 10;
-                subtract = 1;
-                decString += to_string(r);
-            } else {
-                int r = (pBN1->decStr.at(i) - pBN2->decStr.at(i)) - subtract;
-                subtract = 0;
-                decString += to_string(r);
-            }
-        }
-        res.decStr = decString;
-        res.decDigs = decString.length();
-        for (int i = 0; i < pBN2->intDigs; ++i) {
-            if ((pBN1->intStr.at(i) - '0') - subtract < (pBN2->intStr.at(i) - '0')) {
-                int r = (pBN1->intStr.at(i) - pBN2->intStr.at(i)) - subtract + 10;
-                subtract = 1;
-                intString += to_string(r);
-            } else {
-                int r = (pBN1->intStr.at(i) - pBN2->intStr.at(i)) - subtract;
-                subtract = 0;
-                intString += to_string(r);
-            }
-        }
-        if (pBN1->intDigs > pBN2->intDigs) {
-            for (int i = pBN2->intDigs; i < pBN1->intDigs; ++i) {
-                if ((pBN1->intStr.at(i) - '0') - subtract < 0) {
-                    int r = (pBN1->intStr.at(i) - '0') - subtract + 10;
-                    subtract = 1;
-                    intString += to_string(r);
-                } else {
-                    int r = (pBN1->intStr.at(i) - '0') - subtract;
-                    subtract = 0;
-                    intString += to_string(r);
-                }
-            }
-        }
-        res.intDigs = pBN1->intDigs;
-        res.intStr = intString;
-        if (res.decDigs != 0 && res.decDigs != 1) {
-            reverse(res.decStr.begin(), res.decStr.end());
-        }
-        if (switchSide) {
-            res.sign = (char) (!BN1.sign);
-        } else {
-            res.sign = BN1.sign;
-        }
-        res.adjustDigs();
+        return;
     }
+    int compared = BN1.compare(BN2);
+    if (compared == 0) {
+        return;
+    }
+    int switchSide, minDecDigs, subtract = 0;
+    switchSide = BN1.sign == 0 ? compared == -1 : compared == 1;
+    const CBigNumber *pBN1 = &BN1, *pBN2 = &BN2;
+    if (switchSide) {
+        const CBigNumber *temp = pBN1;
+        pBN1 = pBN2;
+        pBN2 = temp;
+    }
+    string decString, intString;
+    minDecDigs = min(pBN1->decDigs, pBN2->decDigs);
+    if (pBN1->decDigs < pBN2->decDigs) {
+        for (int i = pBN2->decDigs - 1; i >= pBN1->decDigs; --i) {
+            decString += to_string('9' + 1 - subtract - pBN2->decStr.at(i));
+            subtract = 1;
+        }
+    } else if (pBN1->decDigs > pBN2->decDigs) {
+        for (int i = pBN1->decDigs - 1; i >= pBN2->decDigs; --i) {
+            decString += string(1, pBN1->decStr.at(i));
+        }
+        subtract = 0;
+    }
+    for (int i = minDecDigs - 1; i >= 0; --i) {
+        if ((pBN1->decStr.at(i) - '0') - subtract < (pBN2->decStr.at(i) - '0')) {
+            int r = (pBN1->decStr.at(i) - pBN2->decStr.at(i)) - subtract + 10;
+            subtract = 1;
+            decString += to_string(r);
+        } else {
+            int r = (pBN1->decStr.at(i) - pBN2->decStr.at(i)) - subtract;
+            subtract = 0;
+            decString += to_string(r);
+        }
+    }
+    res.decStr = decString;
+    res.decDigs = decString.length();
+    for (int i = 0; i < pBN2->intDigs; ++i) {
+        if ((pBN1->intStr.at(i) - '0') - subtract < (pBN2->intStr.at(i) - '0')) {
+            int r = (pBN1->intStr.at(i) - pBN2->intStr.at(i)) - subtract + 10;
+            subtract = 1;
+            intString += to_string(r);
+        } else {
+            int r = (pBN1->intStr.at(i) - pBN2->intStr.at(i)) - subtract;
+            subtract = 0;
+            intString += to_string(r);
+        }
+    }
+    if (pBN1->intDigs > pBN2->intDigs) {
+        for (int i = pBN2->intDigs; i < pBN1->intDigs; ++i) {
+            if ((pBN1->intStr.at(i) - '0') - subtract < 0) {
+                int r = (pBN1->intStr.at(i) - '0') - subtract + 10;
+                subtract = 1;
+                intString += to_string(r);
+            } else {
+                int r = (pBN1->intStr.at(i) - '0') - subtract;
+                subtract = 0;
+                intString += to_string(r);
+            }
+        }
+    }
+    res.intDigs = pBN1->intDigs;
+    res.intStr = intString;
+    if (res.decDigs != 0 && res.decDigs != 1) {
+        reverse(res.decStr.begin(), res.decStr.end());
+    }
+    if (switchSide) {
+        res.sign = (char) (!BN1.sign);
+    } else {
+        res.sign = BN1.sign;
+    }
+    res.adjustDigs();
 }
 
 void CBigNumber::multiply(const CBigNumber &BN1, const CBigNumber &BN2, CBigNumber &res) {
@@ -384,6 +395,7 @@ void CBigNumber::multiply(const CBigNumber &BN1, const CBigNumber &BN2, CBigNumb
     res.init();
     temp1.moveDecimalPoint(temp1.decDigs);
     temp2.moveDecimalPoint(temp2.decDigs);
+    //i indicates the position of the number in number2
     int i, j;
     for (i = 0; i < temp2.intDigs; ++i) {
         CBigNumber temp;
@@ -462,8 +474,7 @@ void CBigNumber::divide(const CBigNumber &BN1, const CBigNumber &BN2, CBigNumber
         subRes.moveDecimalPoint(1);
         temp1 = subRes;
     }
-    res.moveDecimalPoint(1);
-    res.moveDecimalPoint(moves);
+    res.moveDecimalPoint(moves + 1);
     if (BN1.sign != BN2.sign) {
         res.sign = 1;
     }

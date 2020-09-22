@@ -87,7 +87,7 @@ private:
 //throws when one CBigNumber is divided by 0
 class CZeroDivideException : exception {
 public:
-    const char *what(){
+    const char *what() { /* NOLINT */
         return "CBigNumber: Divided By Zero ! ";;
     }
 };

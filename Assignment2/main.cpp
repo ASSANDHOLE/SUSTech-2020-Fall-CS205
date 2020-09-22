@@ -4,6 +4,7 @@
 #include <exception>
 #include <cmath>
 #include "BigNumber.h"
+#include "Strategies.h"
 
 using namespace std;
 
@@ -57,6 +58,7 @@ stack<char> symStack; /* NOLINT */
 Var vars[MAX];
 //number of variables
 int varNums = 0;
+CStrategies strategies = CStrategies(); /* NOLINT */
 string functionNames[9] = { /* NOLINT */
         "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh", "log", "logTen"
 };
@@ -126,28 +128,21 @@ public:
 
 int main() {
     cout << "welcome to the calculator" << endl;
+    cout << "try to use \"Help\" to get some help" << endl;
     while (true) {
+        numStack = stack<double>();
+        symStack = stack<char>();
         string expression;
         getline(cin, expression);
-        if (expression == "Exit" || expression == "exit" ||
-            expression == "EXIT") {
+        if (expression == "Exit") {
             cout << "EXIT..." << endl;
             return 0;
-        } else if (expression == "clear" || expression == "CLEAR" ||
-                   expression == "CLEAR MEMORY" || expression == "clear memory") {
-            clearStorage();
-            continue;
-        } else if (expression == "list" || expression == "list var" ||
-                   expression == "list all" || expression == "LIST" || expression == "list variables") {
-            listVars();
-            continue;
-        } else if (expression == "for" || expression == "FOR") {
-            forStatement();
-            continue;
-        } else if (expression == "large" || expression == "accurate" ||
-                   expression == "big number" || expression == "accurate number" ||
-                   expression == "BIG" || expression == "big") {
+        }
+        if (expression == "BigN") {
             bigNumberMode();
+            continue;
+        }
+        if (strategies.doStrategy(expression)) {
             continue;
         }
         try {
@@ -156,8 +151,6 @@ int main() {
             } else {
                 exchangeVar(expression);
                 cout << removeExtraZeros(solveFunc(-1, expression)) << endl;
-                numStack = stack<double>();
-                symStack = stack<char>();
             }
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl;
@@ -626,6 +619,66 @@ void forStatement() {
 }
 
 /**
+ * forStatement() in big number mode
+ */
+void forStatementN() {
+    const string ef = "exit FOR ...\n";
+    cout << "please input 3 numbers indicate "
+            "the start point, the end point, and step length" << endl;
+    double start, end, step;
+    cin >> start >> end >> step;
+    string line;
+    getline(cin, line);
+    if (step == 0) {
+        cout << "ERROR: step length == 0" << endl << ef;
+        return;
+    } else if ((start < end && step < 0) || (start > end && step > 0)) {
+        cout << "ERROR: end is unable to reach" << endl << ef;
+        return;
+    } else if (start == end) {
+        cout << "ERROR: start == end" << endl << ef;
+    }
+    cout << "please input 2 string indicate the variable "
+            "(different from the already defined) and the expression" << endl;
+    cout << "use comma (,) to separate 2 strings" << endl;
+    getline(cin, line);
+    int pos = line.find(',');
+    string var = line.substr(0, pos);
+    string exp = line.substr(pos + 1, line.length() - pos - 1);
+    removeSpace(var);
+    removeSpace(exp);
+    for (int i = 0; i < varNums; ++i) {
+        if (var == vars[i].name) {
+            cout << "ERROR: the variable: \"" << var << "\" is already used" << endl << ef;
+            return;
+        }
+    }
+    for (int i = 0; i < ((end - start) / step) + 1; ++i) {
+        string tempExp = exp;
+        try {
+            string str = var + "=" + to_string(start + i * step);
+            initVarN(str);
+            exchangeVar(tempExp);
+            cout << var << " = " << start + i * step << " :  " <<
+                 calculateN(tempExp).toString() << endl;
+        } catch (CInputTypeErrorExc &e) {
+            cout << CInputTypeErrorExc::message() << endl << ef;
+            break;
+        } catch (CInitVarErrorExc &e) {
+            cout << CInitVarErrorExc::message() << endl << ef;
+            break;
+        } catch (exception &e) {
+            cout << e.what() << endl << ef;
+            clearStorage();
+            break;
+        }
+    }
+    varNums--;
+    bigNumStack = stack<CBigNumber>();
+    symStack = stack<char>();
+}
+
+/**
  * remove all blank space(" ") in the expression
  */
 void removeSpace(string &str) {
@@ -659,7 +712,7 @@ int compareOpe(char c) {
         case '+':
         case '-':
         case ')':
-        //end of the expression
+            //end of the expression
         case '=':
             return 0;
         default:
@@ -707,33 +760,27 @@ void bigNumberMode() {
     cout << "your variables won't being deleted, you should clear them manually" << endl;
     cout << "are you sure to get in [y/n]" << endl;
     string expression;
-    do {
+    while (true) {
         getline(cin, expression);
         if (expression == "y") {
-            cout << "you are in big number" << endl;
+            cout << "you are in big number mode" << endl;
             break;
         }
         if (expression == "n") {
             cout << "exit big number..." << endl;
             return;
         }
-    } while (expression != "y" && expression != "n");
+    }
     while (true) {
+        bigNumStack = stack<CBigNumber>();
+        symStack = stack<char>();
         getline(cin, expression);
         if (expression == "Exit" || expression == "exit" ||
             expression == "EXIT") {
             cout << "EXIT BIG NUMBER..." << endl;
             return;
-        } else if (expression == "clear" || expression == "CLEAR" ||
-                   expression == "CLEAR MEMORY" || expression == "clear memory") {
-            clearStorage();
-            continue;
-        } else if (expression == "list" || expression == "list var" ||
-                   expression == "list all" || expression == "LIST" || expression == "list variables") {
-            listVars();
-            continue;
-        } else if (expression == "for" || expression == "FOR") {
-            forStatement();
+        }
+        if (strategies.doStrategy(expression)) {
             continue;
         }
         try {
@@ -742,8 +789,6 @@ void bigNumberMode() {
             } else {
                 exchangeVar(expression);
                 cout << calculateN(expression).toString() << endl;
-                bigNumStack = stack<CBigNumber>();
-                symStack = stack<char>();
             }
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl;
@@ -755,7 +800,7 @@ void bigNumberMode() {
             cout << e.what() << endl;
             continue;
         } catch (exception &e) {
-            cout << e.what() << endl;
+            cout << "ERROR: " << e.what() << endl;
             cout << "sorry, but the storage must be cleared" << endl;
             clearStorage();
             continue;
