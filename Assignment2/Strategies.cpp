@@ -17,6 +17,10 @@ void forStatement();
 
 void forStatementN();
 
+void deleteFunction(string &);
+
+void clearFunctions();
+
 void strategyHelp() {
     cout
             << "Commands:" << endl
@@ -29,7 +33,12 @@ void strategyHelp() {
             << "    Example: examples of using variables" << endl
             << "Functions:" << endl
             << R"(    "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh", "log", "logTen";)" << endl
-            << R"(    where "log" == log2 & "logTen" == log10 )" << endl;
+            << R"(    where "log" == log2 & "logTen" == log10 )" << endl
+            << "Special:" << endl
+            << "    Define (function name),(expression)" << endl
+            << "    Define -help for more detail" << endl
+            << "    Delete (function name)" << endl;
+
 }
 
 void strategyVariableExample(){
@@ -46,6 +55,18 @@ void strategyVariableExample(){
             << "the output is 2" << endl;
 }
 
+void strategyDefineExample(){
+    cout
+            << "use 'x' as function variables, "
+            << "the following are ordered inputs:" << endl
+            << "Define funcA,3*3+x" << endl
+            << "3*3+funcA(11)" << endl
+            << "the output is 29" << endl
+            << "if you want to delete one function, " << endl
+            << "just use Delete (function name)" << endl
+            << "example: Delete funcA" << endl;
+}
+
 CStrategies::CStrategies() {
     this->strategyMap["help"] = strategyHelp;
     this->strategyMap["Help"] = strategyHelp;
@@ -54,6 +75,8 @@ CStrategies::CStrategies() {
     this->strategyMap["List"] = listVars;
     this->strategyMap["For"] = forStatement;
     this->strategyMap["ForN"] = forStatementN;
+    this->strategyMap["Clear Function"] = clearFunctions;
+    this->strategyMap["Define -help"] = strategyDefineExample;
 }
 
 bool CStrategies::doStrategy(string &key) {

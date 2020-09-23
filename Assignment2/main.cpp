@@ -5,16 +5,21 @@
 #include <cmath>
 #include "BigNumber.h"
 #include "Strategies.h"
+#include "Methods.h"
 
 using namespace std;
 
 int getType(string &);
+
+void initFunc(string &);
 
 void initVar(string &);
 
 void initVarN(string &);
 
 void exchangeVar(string &);
+
+void exchangeFunction(string &);
 
 bool check(string);
 
@@ -42,6 +47,10 @@ void clearStorage();
 
 void bigNumberMode();
 
+void deleteFunction(string &);
+
+void clearFunctions();
+
 /* store variables with name and value */
 struct Var {
     string name;
@@ -51,9 +60,12 @@ struct Var {
 const int MAX = 100;
 const int INIT_VAR = 1;
 const int CALC = 2;
+const int DEFINE_FUNC = 3;
+const int DELETE_FUNC = 4;
 stack<double> numStack; /* NOLINT */
 stack<CBigNumber> bigNumStack; /* NOLINT */
 stack<char> symStack; /* NOLINT */
+CMethods methods; /* NOLINT */
 //variables
 Var vars[MAX];
 //number of variables
@@ -146,11 +158,17 @@ int main() {
             continue;
         }
         try {
-            if (getType(expression) == INIT_VAR) {
+            int type=getType(expression);
+            if (type == INIT_VAR) {
                 initVar(expression);
-            } else {
+            } else if (type == CALC){
                 exchangeVar(expression);
+                exchangeFunction(expression);
                 cout << removeExtraZeros(solveFunc(-1, expression)) << endl;
+            } else if (type == DEFINE_FUNC){
+                initFunc(expression);
+            } else {
+                deleteFunction(expression);
             }
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl;
@@ -168,11 +186,40 @@ int main() {
 }
 
 int getType(string &in) {
+    if (in.length()>10 && in.substr(0,7) == "Define "){
+        return DEFINE_FUNC;
+    }
+    if (in.length()>7 && in.substr(0,7) == "Delete "){
+        return DELETE_FUNC;
+    }
     int pos = in.find('=');
     if (pos > 0 && pos < in.length() - 1) {
         return INIT_VAR;
     }
     return CALC;
+}
+
+void initFunc(string &exp){
+    exp = exp.substr(7);
+    removeSpace(exp);
+    int pos = exp.find(',');
+    string name = exp.substr(0,pos);
+    if (CFunctions::checkName(name) >= 0) {
+        cout << "ERROR: the function name: \"" << name <<
+             "\" is a predefined function name" << endl;
+        return;
+    }
+    for (int i = 0; i < varNums; ++i) {
+        if (name==vars[i].name){
+            cout << "ERROR: the function name: \"" << name <<
+                 "\" is defined as a variable" << endl;
+            return;
+        }
+    }
+    string expression = exp.substr(pos+1);
+    if (!methods.add(name,expression)){
+        cout << "unable to add function" << endl;
+    }
 }
 
 /**
@@ -187,6 +234,11 @@ void initVar(string &exp) {
     if (CFunctions::checkName(toInit) >= 0) {
         cout << "ERROR: the variable name: \"" << toInit <<
              "\" is predefined as function name" << endl;
+        return;
+    }
+    if (!methods.check(toInit).empty()){
+        cout << "ERROR: the variable name: \"" << toInit <<
+             "\" is defined as a user function" << endl;
         return;
     }
     int index = varNums;
@@ -212,6 +264,7 @@ void initVar(string &exp) {
         return;
     }
     exchangeVar(exp);
+    exchangeFunction(exp);
     try {
         vars[index] = {toInit, solveFunc(-1, exp)};
         varNums += existence ? 0 : 1;
@@ -233,6 +286,11 @@ void initVarN(string &exp) {
              "\" is predefined as function name" << endl;
         return;
     }
+    if (!methods.check(toInit).empty()){
+        cout << "ERROR: the variable name: \"" << toInit <<
+             "\" is defined as a user function" << endl;
+        return;
+    }
     int index = varNums;
     bool existence = false;
     for (int i = 0; i < varNums; ++i) {
@@ -256,6 +314,7 @@ void initVarN(string &exp) {
         return;
     }
     exchangeVar(exp);
+    exchangeFunction(exp);
     try {
         vars[index] = {toInit, calculateN(exp).toString()};
         varNums += existence ? 0 : 1;
@@ -312,6 +371,48 @@ void exchangeVar(string &exp) {
         for (int i = 0; i < varNums; ++i) {
             if (vars[i].name == temp) {
                 exp.replace(exp.length() - length, length, vars[i].value);
+            }
+        }
+    }
+}
+
+void exchangeFunction(string &exp){
+    if (exp.empty()) {
+        return;
+    }
+    string temp;
+    int length = 0;
+    for (int i = 0; i < exp.length(); ++i) {
+        char c = exp.at(i);
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (!temp.empty() && c >= 0 && c <= 9)) {
+            temp += c;
+            length++;
+        } else {
+            if (!temp.empty() && c == '(') {
+                int count = 1;
+                int endLength = 0;
+                for (int j = i + 1; j < exp.length(); ++j) {
+                    char ch = exp.at(j);
+                    if (ch == '(') {
+                        count++;
+                    } else if (ch == ')') {
+                        count--;
+                    }
+                    if (count == 0) {
+                        endLength = j - i + 1;
+                        break;
+                    }
+                }
+                string sub = exp.substr(i + 1, endLength - 2);
+                string expression=methods.check(temp);
+                if (!expression.empty()){
+                    CMethods::replace(expression,sub);
+                    exp.replace(i - temp.length(),
+                                endLength + temp.length(), expression);
+                    i = (i-temp.length()-1<1)?i-(int)temp.length()-1:0;
+                    temp = "";
+                    length = 0;
+                }
             }
         }
     }
@@ -784,11 +885,17 @@ void bigNumberMode() {
             continue;
         }
         try {
-            if (getType(expression) == INIT_VAR) {
+            int type=getType(expression);
+            if (type == INIT_VAR) {
                 initVarN(expression);
-            } else {
+            } else if (type == CALC){
                 exchangeVar(expression);
+                exchangeFunction(expression);
                 cout << calculateN(expression).toString() << endl;
+            } else if (type == DEFINE_FUNC){
+                initFunc(expression);
+            } else {
+                deleteFunction(expression);
             }
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl;
@@ -806,4 +913,16 @@ void bigNumberMode() {
             continue;
         }
     }
+}
+
+void deleteFunction(string &exp){
+    string name = exp.substr(7);
+    if (methods.check(name).empty()){
+        return;
+    }
+    methods.erase(name);
+}
+
+void clearFunctions(){
+    methods.clear();
 }
