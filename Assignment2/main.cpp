@@ -51,6 +51,8 @@ void deleteFunction(string &);
 
 void clearFunctions();
 
+void clearStack();
+
 /* store variables with name and value */
 struct Var {
     string name;
@@ -172,9 +174,11 @@ int main() {
             }
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl;
+            clearStack();
             continue;
         } catch (CInitVarErrorExc &e) {
             cout << CInitVarErrorExc::message() << endl;
+            clearStack();
             continue;
         } catch (exception &e) {
             cout << e.what() << endl;
@@ -198,6 +202,7 @@ int getType(string &in) {
     }
     return CALC;
 }
+
 
 void initFunc(string &exp){
     exp = exp.substr(7);
@@ -707,12 +712,15 @@ void forStatement() {
                  removeExtraZeros(solveFunc(-1, tempExp)) << endl;
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl << ef;
+            clearStack();
             break;
         } catch (CInitVarErrorExc &e) {
             cout << CInitVarErrorExc::message() << endl << ef;
+            clearStack();
             break;
         } catch (exception &e) {
             cout << e.what() << endl << ef;
+            clearStorage();
             break;
         }
     }
@@ -764,9 +772,11 @@ void forStatementN() {
                  calculateN(tempExp).toString() << endl;
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl << ef;
+            clearStack();
             break;
         } catch (CInitVarErrorExc &e) {
             cout << CInitVarErrorExc::message() << endl << ef;
+            clearStack();
             break;
         } catch (exception &e) {
             cout << e.what() << endl << ef;
@@ -873,8 +883,7 @@ void bigNumberMode() {
         }
     }
     while (true) {
-        bigNumStack = stack<CBigNumber>();
-        symStack = stack<char>();
+        clearStack();
         getline(cin, expression);
         if (expression == "Exit" || expression == "exit" ||
             expression == "EXIT") {
@@ -899,12 +908,15 @@ void bigNumberMode() {
             }
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl;
+            clearStack();
             continue;
         } catch (CInitVarErrorExc &e) {
             cout << CInitVarErrorExc::message() << endl;
+            clearStack();
             continue;
         } catch (CZeroDivideException &e) {
             cout << e.what() << endl;
+            clearStack();
             continue;
         } catch (exception &e) {
             cout << "ERROR: " << e.what() << endl;
@@ -925,4 +937,10 @@ void deleteFunction(string &exp){
 
 void clearFunctions(){
     methods.clear();
+}
+
+void clearStack(){
+    numStack=stack<double>();
+    bigNumStack=stack<CBigNumber>();
+    symStack=stack<char>();
 }

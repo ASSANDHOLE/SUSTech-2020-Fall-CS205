@@ -49,6 +49,9 @@ void CMethods::replace(string &expression, string &var) {
     while (getline(expStream, part, 'x')){
         expParts.push_back(part);
     }
+    if (expression.at(expression.length()-1)=='x'){
+        expParts.emplace_back("");
+    }
     string ans = expParts.at(0);
     if (expParts.size()>1){
         ans = expParts.at(0);
