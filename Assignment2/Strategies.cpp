@@ -28,16 +28,17 @@ void strategyHelp() {
             << "    Clear: clear variable storage" << endl
             << "    List: list all variable with value" << endl
             << "    For: use \"for\" method, more info when entered" << endl
-            << "    ForN: \"For\" in big number mode (can be accessed any where)" << endl
-            << "    BigN: big number mode, functions not supported" << endl
+            << "    ForN: \"For\" in big number mode (can be accessed any where)" << endl << endl
+            << "    BigN: big number mode, pre defined functions not supported" << endl
             << "    Example: examples of using variables" << endl
-            << "Functions:" << endl
-            << R"(    "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh", "log", "logTen";)" << endl
-            << R"(    where "log" == log2 & "logTen" == log10 )" << endl
+            << "Predefined functions:" << endl
+            << R"(    "sqrt", "sin", "cos", "tan", "sinh")" << endl
+            << R"(    "cosh", "tanh", "log", "logTen", "gamma")" << endl
+            << R"(    where "log" == log2 & "logTen" == log10)" << endl
             << "Special:" << endl
             << "    Define (function name),(expression)" << endl
-            << "    Define -help for more detail" << endl
-            << "    Delete (function name)" << endl;
+            << "    Delete (function name)" << endl
+            << "    Define -help for more detail" << endl;
 
 }
 

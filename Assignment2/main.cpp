@@ -73,9 +73,11 @@ Var vars[MAX];
 //number of variables
 int varNums = 0;
 CStrategies strategies = CStrategies(); /* NOLINT */
-string functionNames[9] = { /* NOLINT */
-        "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh", "log", "logTen"
+string functionNames[10] = { /* NOLINT */
+        "sqrt", "sin", "cos", "tan", "sinh",
+        "cosh", "tanh", "log", "logTen", "gamma"
 };
+const int FUNCTION_NUMS = sizeof(functionNames) / sizeof(functionNames[0]);
 
 class CInputTypeErrorExc : public exception {
 public:
@@ -100,7 +102,7 @@ public:
      * @return return the number of the position of the name in the list. -1 if not in
      */
     static int checkName(string &varName) {
-        for (int i = 0; i < 9; ++i) {
+        for (int i = 0; i < FUNCTION_NUMS; ++i) {
             if (varName == functionNames[i]) {
                 return i;
             }
@@ -134,6 +136,8 @@ public:
                 return log(value);
             case 8:
                 return log10(value);
+            case 9:
+                return tgamma(value);
             default:
                 return value;
         }
