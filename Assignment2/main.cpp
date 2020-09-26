@@ -6,10 +6,13 @@
 #include "BigNumber.h"
 #include "Strategies.h"
 #include "Methods.h"
+#include <Windows.h>
 
 using namespace std;
 
 int getType(string &);
+
+void systemCalc(string &);
 
 void initFunc(string &);
 
@@ -64,6 +67,7 @@ const int INIT_VAR = 1;
 const int CALC = 2;
 const int DEFINE_FUNC = 3;
 const int DELETE_FUNC = 4;
+const int SYSTEM_CALC = 5;
 stack<double> numStack; /* NOLINT */
 stack<CBigNumber> bigNumStack; /* NOLINT */
 stack<char> symStack; /* NOLINT */
@@ -164,17 +168,19 @@ int main() {
             continue;
         }
         try {
-            int type=getType(expression);
+            int type = getType(expression);
             if (type == INIT_VAR) {
                 initVar(expression);
-            } else if (type == CALC){
+            } else if (type == CALC) {
                 exchangeVar(expression);
                 exchangeFunction(expression);
                 cout << removeExtraZeros(solveFunc(-1, expression)) << endl;
-            } else if (type == DEFINE_FUNC){
+            } else if (type == DEFINE_FUNC) {
                 initFunc(expression);
-            } else {
+            } else if (type == DELETE_FUNC) {
                 deleteFunction(expression);
+            } else {
+                systemCalc(expression);
             }
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl;
@@ -194,11 +200,14 @@ int main() {
 }
 
 int getType(string &in) {
-    if (in.length()>10 && in.substr(0,7) == "Define "){
+    if (in.length() > 10 && in.substr(0, 7) == "Define ") {
         return DEFINE_FUNC;
     }
-    if (in.length()>7 && in.substr(0,7) == "Delete "){
+    if (in.length() > 7 && in.substr(0, 7) == "Delete ") {
         return DELETE_FUNC;
+    }
+    if (in.length() > 11 && in.substr(0, 11) == "USE_SYSTEM ") {
+        return SYSTEM_CALC;
     }
     int pos = in.find('=');
     if (pos > 0 && pos < in.length() - 1) {
@@ -207,26 +216,73 @@ int getType(string &in) {
     return CALC;
 }
 
+void systemCalc(string &exp) {
+    int interval = 1000;
+    exp = exp.substr(11);
+    int pos;
+    pos = exp.find(',');
+    if (pos != string::npos) {
+        interval = stoi(exp.substr(pos + 1));
+        exp = exp.substr(0, pos);
+    }
+    removeSpace(exp);
+    system("CALC");
+    Sleep(interval);
+    for (char i : exp) {
+        if (i == '(') {
+            keybd_event(VK_SHIFT, 0, 0, 0);
+            keybd_event('9', 0, 0, 0);
+            keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
+            keybd_event('9', 0, KEYEVENTF_KEYUP, 0);
+        } else if (i == ')') {
+            keybd_event(VK_SHIFT, 0, 0, 0);
+            keybd_event('0', 0, 0, 0);
+            keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
+            keybd_event('0', 0, KEYEVENTF_KEYUP, 0);
+        } else if (i == '+') {
+            keybd_event(VK_ADD, 0, 0, 0);
+            keybd_event(VK_ADD, 0, KEYEVENTF_KEYUP, 0);
+        } else if (i == '-') {
+            keybd_event(VK_SUBTRACT, 0, 0, 0);
+            keybd_event(VK_SUBTRACT, 0, KEYEVENTF_KEYUP, 0);
+        } else if (i == '*') {
+            keybd_event(VK_MULTIPLY, 0, 0, 0);
+            keybd_event(VK_MULTIPLY, 0, KEYEVENTF_KEYUP, 0);
+        } else if (i == '/') {
+            keybd_event(VK_DIVIDE, 0, 0, 0);
+            keybd_event(VK_DIVIDE, 0, KEYEVENTF_KEYUP, 0);
+        } else if (i == '.') {
+            keybd_event(VK_OEM_PERIOD, 0, 0, 0);
+            keybd_event(VK_OEM_PERIOD, 0, KEYEVENTF_KEYUP, 0);
+        } else {
+            keybd_event((byte) i, 0, 0, 0);
+            keybd_event((byte) i, 0, KEYEVENTF_KEYUP, 0);
+        }
+    }
+    keybd_event(VK_RETURN, 0, 0, 0);
+    keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
+    system("pause");
+}
 
-void initFunc(string &exp){
+void initFunc(string &exp) {
     exp = exp.substr(7);
     removeSpace(exp);
     int pos = exp.find(',');
-    string name = exp.substr(0,pos);
+    string name = exp.substr(0, pos);
     if (CFunctions::checkName(name) >= 0) {
         cout << "ERROR: the function name: \"" << name <<
              "\" is a predefined function name" << endl;
         return;
     }
     for (int i = 0; i < varNums; ++i) {
-        if (name==vars[i].name){
+        if (name == vars[i].name) {
             cout << "ERROR: the function name: \"" << name <<
                  "\" is defined as a variable" << endl;
             return;
         }
     }
-    string expression = exp.substr(pos+1);
-    if (!methods.add(name,expression)){
+    string expression = exp.substr(pos + 1);
+    if (!methods.add(name, expression)) {
         cout << "unable to add function" << endl;
     }
 }
@@ -245,7 +301,7 @@ void initVar(string &exp) {
              "\" is predefined as function name" << endl;
         return;
     }
-    if (!methods.check(toInit).empty()){
+    if (!methods.check(toInit).empty()) {
         cout << "ERROR: the variable name: \"" << toInit <<
              "\" is defined as a user function" << endl;
         return;
@@ -295,7 +351,7 @@ void initVarN(string &exp) {
              "\" is predefined as function name" << endl;
         return;
     }
-    if (!methods.check(toInit).empty()){
+    if (!methods.check(toInit).empty()) {
         cout << "ERROR: the variable name: \"" << toInit <<
              "\" is defined as a user function" << endl;
         return;
@@ -385,7 +441,7 @@ void exchangeVar(string &exp) {
     }
 }
 
-void exchangeFunction(string &exp){
+void exchangeFunction(string &exp) {
     if (exp.empty()) {
         return;
     }
@@ -413,12 +469,12 @@ void exchangeFunction(string &exp){
                     }
                 }
                 string sub = exp.substr(i + 1, endLength - 2);
-                string expression=methods.check(temp);
-                if (!expression.empty()){
-                    CMethods::replace(expression,sub);
+                string expression = methods.check(temp);
+                if (!expression.empty()) {
+                    CMethods::replace(expression, sub);
                     exp.replace(i - temp.length(),
                                 endLength + temp.length(), expression);
-                    i = (i-temp.length()-1<1)?i-(int)temp.length()-1:0;
+                    i = (i - temp.length() - 1 < 1) ? i - (int) temp.length() - 1 : 0;
                     temp = "";
                     length = 0;
                 }
@@ -898,17 +954,19 @@ void bigNumberMode() {
             continue;
         }
         try {
-            int type=getType(expression);
+            int type = getType(expression);
             if (type == INIT_VAR) {
                 initVarN(expression);
-            } else if (type == CALC){
+            } else if (type == CALC) {
                 exchangeVar(expression);
                 exchangeFunction(expression);
                 cout << calculateN(expression).toString() << endl;
-            } else if (type == DEFINE_FUNC){
+            } else if (type == DEFINE_FUNC) {
                 initFunc(expression);
-            } else {
+            } else if (type == DELETE_FUNC) {
                 deleteFunction(expression);
+            } else {
+                systemCalc(expression);
             }
         } catch (CInputTypeErrorExc &e) {
             cout << CInputTypeErrorExc::message() << endl;
@@ -931,20 +989,20 @@ void bigNumberMode() {
     }
 }
 
-void deleteFunction(string &exp){
+void deleteFunction(string &exp) {
     string name = exp.substr(7);
-    if (methods.check(name).empty()){
+    if (methods.check(name).empty()) {
         return;
     }
     methods.erase(name);
 }
 
-void clearFunctions(){
+void clearFunctions() {
     methods.clear();
 }
 
-void clearStack(){
-    numStack=stack<double>();
-    bigNumStack=stack<CBigNumber>();
-    symStack=stack<char>();
+void clearStack() {
+    numStack = stack<double>();
+    bigNumStack = stack<CBigNumber>();
+    symStack = stack<char>();
 }

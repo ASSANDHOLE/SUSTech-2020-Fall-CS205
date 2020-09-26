@@ -13,14 +13,18 @@ using namespace std;
 class CMethods {
 public:
     bool add(string &, string &);
+
     string check(string &);
+
     void erase(string &);
+
     void clear();
+
     static void replace(string &, string &);
 
 private:
     int currentIndex = 0;
-    map<string,string> methodMap;
+    map<string, string> methodMap;
 };
 
 

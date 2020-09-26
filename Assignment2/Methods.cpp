@@ -10,8 +10,8 @@
 
 using namespace std;
 
-bool CMethods::add(string& name, string& expression) {
-    if (expression.empty()){
+bool CMethods::add(string &name, string &expression) {
+    if (expression.empty()) {
         return false;
     }
     this->methodMap[name] = expression;
@@ -36,8 +36,8 @@ void CMethods::erase(string &key) {
 }
 
 void CMethods::clear() {
-    this->currentIndex=0;
-    if (!this->methodMap.empty()){
+    this->currentIndex = 0;
+    if (!this->methodMap.empty()) {
         this->methodMap.erase(this->methodMap.begin(), this->methodMap.end());
     }
 }
@@ -46,19 +46,19 @@ void CMethods::replace(string &expression, string &var) {
     vector<string> expParts;
     stringstream expStream(expression);
     string part;
-    while (getline(expStream, part, 'x')){
+    while (getline(expStream, part, 'x')) {
         expParts.push_back(part);
     }
-    if (expression.at(expression.length()-1)=='x'){
+    if (expression.at(expression.length() - 1) == 'x') {
         expParts.emplace_back("");
     }
     string ans = expParts.at(0);
-    if (expParts.size()>1){
+    if (expParts.size() > 1) {
         ans = expParts.at(0);
         for (int i = 1; i < expParts.size(); ++i) {
-            ans += "("+var+")"+expParts.at(i);
+            ans += "(" + var + ")" + expParts.at(i);
         }
-        expression=ans;
-        expression = "("+expression+")";
+        expression = ans;
+        expression = "(" + expression + ")";
     }
 }
