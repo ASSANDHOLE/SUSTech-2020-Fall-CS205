@@ -1,0 +1,3 @@
+SET(OpenBLAS_VERSION "0.3.3")
+SET(OpenBLAS_INCLUDE_DIRS /d/GDAL/OpenBLAS-0.3.3x64/include)
+SET(OpenBLAS_LIBRARIES /d/GDAL/OpenBLAS-0.3.3x64/bin/libopenblas.dll)

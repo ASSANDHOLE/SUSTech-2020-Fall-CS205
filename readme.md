@@ -5,4 +5,6 @@ This repository contains the released assignments for the fall 2020 [CS205](http
 
 * [Assignment2-multifunctional calculator](https://github.com/ASSANDHOLE/CS205/tree/master/Assignment2) A calculator that has a lot of functions
 
+* [Assignment3-dot product](https://github.com/ASSANDHOLE/CS205/tree/master/Assignment3) functions for fast inner product of 2 vectors
+
 * _to be continue..._
