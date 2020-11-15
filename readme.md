@@ -7,4 +7,6 @@ This repository contains the released assignments for the fall 2020 [CS205](http
 
 * [Assignment3-dot product](https://github.com/ASSANDHOLE/CS205/tree/master/Assignment3) functions for fast inner product of 2 vectors
 
+* [Project1-Matrix Multiplication](https://github.com/ASSANDHOLE/CS205/tree/master/Project1) Class Matrix who has a optimized multiplication function for float
+
 * _to be continue..._
