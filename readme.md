@@ -9,4 +9,6 @@ This repository contains the released assignments for the fall 2020 [CS205](http
 
 * [Project1-Matrix Multiplication](https://github.com/ASSANDHOLE/CS205/tree/master/Project1) Class Matrix who has a optimized multiplication function for float
 
+* [Assignment4-Matrix Class](https://github.com/ASSANDHOLE/CS205/tree/master/Assignment4) Class Matrix for float - manage space more efficiently
+
 * _to be continue..._
