@@ -11,4 +11,4 @@ This repository contains the released assignments for the fall 2020 [CS205](http
 
 * [Assignment4-Matrix Class](https://github.com/ASSANDHOLE/CS205/tree/master/Assignment4) Class Matrix for float - manage space more efficiently
 
-* _to be continue..._
+* [Project2-Simple Cnn](https://github.com/ASSANDHOLE/CS205/tree/master/Project2) Simple CNN to get confident score if the give pic has face
