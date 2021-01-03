@@ -12,7 +12,11 @@
 #endif
 
 std::string GetFileName(std::string full_path) {
+#ifdef WIN32
     full_path.replace(0, full_path.find_last_of('\\') + 1, "");
+#else
+	full_path.replace(0, full_path.find_last_of('/') + 1, "");
+#endif
     return full_path;
 }
 
