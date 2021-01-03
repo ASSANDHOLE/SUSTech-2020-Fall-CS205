@@ -4,9 +4,9 @@ project(Project2)
 set(CMAKE_CXX_STANDARD 14)
 
 set(LOCAL_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
-#set(OpenCV_DIR "path/to/opencv")
+set(OpenCV_DIR "path/to/opencv")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 aux_source_directory(${CMAKE_CURRENT_LIST_DIR}/src SRC_FLIES)
 

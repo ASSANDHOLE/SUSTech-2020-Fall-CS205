@@ -4,9 +4,8 @@
 
 #include "face_detect_cnn.h"
 #include "cnn_param.h"
+#include <cmath>
 #include <numeric>
-
-//#define DEBUG
 
 /**
  * input 128 * 128 * 3(channels) = 16384 * 3 = 49152
@@ -19,12 +18,6 @@
  * FullCon 1 * 2048 -> 1 * 2
  * GetScore
  */
-
-#include <cmath>
-#include <math.h>
-#include <cstring>
-
-#define ENABLE_OPENMP00
 
 float PartConv(const CnnMatrix &mat, const ConvParam &param, int i, int j, int k) {
     float res = 0;
@@ -46,9 +39,6 @@ void ConvLayer(const CnnMatrix &in, CnnMatrix &out, const ConvParam &param) {
     out.data_ = new float [out.Total()];
     for (int i = 0; i < out.channels_; ++i) {
         for (int j = 0; j < out.rows_; ++j) {
-#ifdef ENABLE_OPENMP
-#pragma omp parallel for
-#endif
             for (int k = 0; k < out.cols_; ++k) {
                 out.Set(PartConv(in, param, i, j, k) + param.p_bias[i], i, j, k);
             }
@@ -80,9 +70,6 @@ void MaxPoolingLayer(const CnnMatrix &in, CnnMatrix &out) {
     out.data_ = new float [out.Total()];
     for (int i = 0; i < out.channels_; ++i) {
         for (int j = 0; j < out.rows_; ++j) {
-#ifdef ENABLE_OPENMP
-#pragma omp parallel for
-#endif
             for (int k = 0; k < out.cols_; ++k) {
                 out.Set(PartPooling(in, i, j, k), i, j, k);
             }
@@ -92,15 +79,7 @@ void MaxPoolingLayer(const CnnMatrix &in, CnnMatrix &out) {
 }
 
 float DotProduct(const CnnMatrix &in, const FcParam &param, int index) {
-    //return std::inner_product(in.data_, &in.data_[in.Total()], &param.p_weight[index * in.Total()], 0.0f);
-    float res = 0;
-#ifdef ENABLE_OPENMP
-#pragma omp parallel for reduction(+:res)
-#endif
-    for (int i = 0; i < in.Total(); ++i) {
-        res += in.data_[i] * param.p_weight[i + index];
-    }
-    return res;
+    return std::inner_product(in.data_, &in.data_[in.Total()], &param.p_weight[index], 0.0f);
 }
 
 void FcLayer(const CnnMatrix &in, CnnMatrix &out, const FcParam &param) {

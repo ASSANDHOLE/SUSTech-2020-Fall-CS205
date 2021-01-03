@@ -1,7 +1,11 @@
 #include <iostream>
-#include "face_detect_cnn.h"
+#include <string>
+#include <sstream>
 #include <vector>
+
 #include "opencv2/opencv.hpp"
+
+#include "face_detect_cnn.h"
 #include "timer_local.h"
 
 #ifdef WIN32
@@ -20,6 +24,10 @@ std::string GetFileName(std::string full_path) {
     return full_path;
 }
 
+/**
+ * Use OpenCV to read image and get confidence score by {@code GetConfidenceScore128x128rbg}
+ * @param name
+ */
 void PrintImage(const std::string &name) {
     using namespace cv;
     Mat mat = imread(name, IMREAD_COLOR);
@@ -42,6 +50,12 @@ void PrintImage(const std::string &name) {
     std::cout << GetFileName(name) << "\nScore:    " << out << "\n\n";
 }
 
+/**
+ * Get all files in {@code path} by full path
+ * @param path given dir
+ * @param files files found
+ * @param recursively if find files recursively
+ */
 void GetAllFiles(const std::string &path, std::vector<std::string> &files, bool recursively = false) {
 #ifdef WIN32
     long h_file;
@@ -73,7 +87,7 @@ void GetAllFiles(const std::string &path, std::vector<std::string> &files, bool 
             }
             std::string dir_new = path + "/" + entry->d_name;
             std::vector<std::string> temp_path;
-            GetFilesList(dir_new, temp_path);
+            GetAllFiles(dir_new, temp_path);
             files.insert(files.end(), temp_path.begin(), temp_path.end());
         }else {
             std::string name = entry->d_name;
@@ -89,17 +103,19 @@ void GetAllFiles(const std::string &path, std::vector<std::string> &files, bool 
 int main() {
 
     //the dir witch contains all the img files
-    const std::string kImagesPath = R"(D:\samples)";
+    const std::string kImagesPath = "path/to/imgs";
 
     std::vector<std::string> file_names;
     GetAllFiles(kImagesPath, file_names);
-    TIME_INIT
+    std::stringstream name_stream;
+    name_stream << "All " << file_names.size() << " files";
 
+    TIME_INIT
     TIME_START
     for (const auto &file_name : file_names) {
         PrintImage(file_name);
     }
-    TIME_END("Ori")
+    TIME_END(name_stream.str())
 
     std::cout.flush();
     return 0;
