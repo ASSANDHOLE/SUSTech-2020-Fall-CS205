@@ -98,6 +98,7 @@ void GetAllFiles(const std::string &path, std::vector<std::string> &files, bool 
     }
     closedir(dir);
 #endif
+	std::sort(files.begin(), files.end(), [](const std::string &a, const std::string &b) {return a < b;});
 }
 
 int main() {

@@ -7,18 +7,6 @@
 #include <cmath>
 #include <numeric>
 
-/**
- * input 128 * 128 * 3(channels) = 16384 * 3 = 49152
- * Conv01 128 -> padding 1 -> 130 * 130 * 3 => (stride = 2, kernel_num = 16) => 64 * 64 * 16 = 65536
- * Polling01_relu 64 * 64 * 16 => 32 * 32 * 16 = 16384
- * Conv02 32 * 32 * 16 => (stride = 1, kernel_num = 32) => 30 * 30 * 32 = 28800
- * Polling02_relu 30 * 30 * 32 => 15 * 15 * 32 = 7200
- * Conv03 15 -> padding 1 -> 17 * 17 * 32 => (stride = 2, kernel_num = 32) => 8 * 8 * 32 = 2048
- * Relu and Flatten --
- * FullCon 1 * 2048 -> 1 * 2
- * GetScore
- */
-
 float PartConv(const CnnMatrix &mat, const ConvParam &param, int i, int j, int k) {
     float res = 0;
     for (int l = 0; l < mat.channels_; ++l) {
@@ -37,6 +25,9 @@ void ConvLayer(const CnnMatrix &in, CnnMatrix &out, const ConvParam &param) {
     out.init(param.out_channels, ((in.rows_ + 2 * param.pad - param.kernel_size) / param.stride + 1),
              ((in.cols_ + 2 * param.pad - param.kernel_size) / param.stride + 1));
     out.data_ = new float [out.Total()];
+#ifdef ENABLE_OPENMP
+#pragma omp parallel for
+#endif
     for (int i = 0; i < out.channels_; ++i) {
         for (int j = 0; j < out.rows_; ++j) {
             for (int k = 0; k < out.cols_; ++k) {
@@ -47,6 +38,9 @@ void ConvLayer(const CnnMatrix &in, CnnMatrix &out, const ConvParam &param) {
 }
 
 void Relu(CnnMatrix &mat) {
+#ifdef ENABLE_OPENMP
+#pragma omp parallel for
+#endif
     for (int i = 0; i < mat.Total(); ++i) {
         if (mat.data_[i] < 0) {
             mat.data_[i] = 0;
@@ -68,6 +62,9 @@ float PartPooling(const CnnMatrix &mat, int i, int j, int k) {
 void MaxPoolingLayer(const CnnMatrix &in, CnnMatrix &out) {
     out.init(in.channels_, in.rows_ / 2, in.cols_ / 2);
     out.data_ = new float [out.Total()];
+#ifdef ENABLE_OPENMP
+#pragma omp parallel for
+#endif
     for (int i = 0; i < out.channels_; ++i) {
         for (int j = 0; j < out.rows_; ++j) {
             for (int k = 0; k < out.cols_; ++k) {
@@ -79,7 +76,12 @@ void MaxPoolingLayer(const CnnMatrix &in, CnnMatrix &out) {
 }
 
 float DotProduct(const CnnMatrix &in, const FcParam &param, int index) {
-    return std::inner_product(in.data_, &in.data_[in.Total()], &param.p_weight[index], 0.0f);
+    float res = 0;
+#pragma simd
+    for (int i = 0; i < 2048; ++i) {
+        res += in.data_[i] * param.p_weight[i + index];
+    }
+    return res;
 }
 
 void FcLayer(const CnnMatrix &in, CnnMatrix &out, const FcParam &param) {
