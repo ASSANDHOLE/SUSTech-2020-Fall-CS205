@@ -7,6 +7,12 @@
 #include <cmath>
 #include <numeric>
 
+/**
+ * For the given point(i, j, k) in the output matrices,
+ * calculate the convolution result
+ * @param mat input mats
+ * @param param convolution param
+ */
 float PartConv(const CnnMatrix &mat, const ConvParam &param, int i, int j, int k) {
     float res = 0;
     for (int l = 0; l < mat.channels_; ++l) {
@@ -59,6 +65,9 @@ float PartPooling(const CnnMatrix &mat, int i, int j, int k) {
     return res;
 }
 
+/**
+ * MaxPooling for params of (2, 2)
+ */
 void MaxPoolingLayer(const CnnMatrix &in, CnnMatrix &out) {
     out.init(in.channels_, in.rows_ / 2, in.cols_ / 2);
     out.data_ = new float [out.Total()];
@@ -75,6 +84,10 @@ void MaxPoolingLayer(const CnnMatrix &in, CnnMatrix &out) {
     Relu(out);
 }
 
+/**
+ * Optimized inner product function by {@code #pragma simd} for the full connected layer
+ * @param index the output is 1x2, so this is the 0 or 1
+ */
 float DotProduct(const CnnMatrix &in, const FcParam &param, int index) {
     float res = 0;
 #pragma simd
@@ -84,6 +97,9 @@ float DotProduct(const CnnMatrix &in, const FcParam &param, int index) {
     return res;
 }
 
+/**
+ * implementation of the full connected layer
+ */
 void FcLayer(const CnnMatrix &in, CnnMatrix &out, const FcParam &param) {
     out.init(param.out_features, 1, 1);
     out.data_ = new float [out.Total()];
@@ -92,6 +108,11 @@ void FcLayer(const CnnMatrix &in, CnnMatrix &out, const FcParam &param) {
     }
 }
 
+/**
+ * Get the score for 2 input(X0 or X1) by (e^X(index))/(e^X0 + e^X1)
+ * @param index which input to get result from
+ * @return the final confidence score ranged from 0 to 1
+ */
 float GetScore(CnnMatrix &mat, int index) {
     float res = 0;
     for (int i = 0; i < mat.Total(); ++i) {
