@@ -125,7 +125,7 @@ void GetAllFiles(const std::string &path, std::vector<std::string> &files, bool 
 
 int main() {
     //the dir witch contains all the img files
-    const std::string kImagesPath = R"(G:\ComputerScience\C\CS205\Project2\samples)";
+    const std::string kImagesPath = "path/to/imgs";
 
     std::vector<std::string> file_names;
     std::vector<float*> rgb_arrs;
