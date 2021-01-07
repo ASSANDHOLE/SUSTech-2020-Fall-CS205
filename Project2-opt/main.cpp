@@ -109,7 +109,7 @@ void GetAllFiles(const std::string &path, std::vector<std::string> &files, bool 
             }
             std::string dir_new = path + "/" + entry->d_name;
             std::vector<std::string> temp_path;
-            GetFilesList(dir_new, temp_path);
+            GetAllFiles(dir_new, temp_path);
             files.insert(files.end(), temp_path.begin(), temp_path.end());
         }else {
             std::string name = entry->d_name;
@@ -120,11 +120,12 @@ void GetAllFiles(const std::string &path, std::vector<std::string> &files, bool 
     }
     closedir(dir);
 #endif
+    std::sort(files.begin(), files.end(), [](const std::string &a, const std::string &b) {return a < b;});
 }
 
 int main() {
     //the dir witch contains all the img files
-    const std::string kImagesPath = "path/to/imgs";
+    const std::string kImagesPath = R"(G:\ComputerScience\C\CS205\Project2\samples)";
 
     std::vector<std::string> file_names;
     std::vector<float*> rgb_arrs;
