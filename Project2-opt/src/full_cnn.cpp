@@ -4,35 +4,37 @@
 // Created by AnGuangyan on 2021/1/6.
 //
 
-#include "face_detect_cnn.h"
-#include "cnn_param.h"
+#include <face_detect_cnn.h>
+#include <cnn_param.h>
 
+#include <algorithm>
 #include <cmath>
-#include <cstring>
 
-float *Pad01(const float *arr) {
-    auto res = new float [50700]();
-    const int size = sizeof(float) * 128;
-#ifdef ENABLE_OPENMP
+
+float *Pad01(const float *__restrict__ arr) {
+    auto res = new ALIGN_512 float [50700]();
+#ifdef OPENMP_PARALLEL_FOR
 #pragma omp parallel for
 #endif
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 128; ++j) {
-            memcpy(&res[i * 16900 + j * 130 + 1], &arr[i * 16384 + j * 128], size);
+            // memcpy(&res[i * 16900 + j * 130 + 1], &arr[i * 16384 + j * 128], size);
+            std::copy_n(&arr[i * 16384 + j * 128], 128, &res[i * 16900 + j * 130 + 1]);
         }
     }
     return res;
 }
 
-float *Pad02(const float *arr) {
-    auto res = new float [9248]();
-    const int size = sizeof(float) * 15;
-#ifdef ENABLE_OPENMP
+float *Pad02(const float *__restrict__ arr) {
+    auto res = new ALIGN_512 float [9248]();
+    // const int size = sizeof(float) * 15;
+#ifdef OPENMP_PARALLEL_FOR
 #pragma omp parallel for
 #endif
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 15; ++j) {
-            memcpy(&res[i * 289 + (j + 1) * 17 + 1], &arr[i * 225 + j * 15], size);
+            // memcpy(&res[i * 289 + (j + 1) * 17 + 1], &arr[i * 225 + j * 15], size);
+            std::copy_n(&arr[i * 225 + j * 15], 15, &res[i * 289 + (j + 1) * 17 + 1]);
         }
     }
     return res;
@@ -40,9 +42,10 @@ float *Pad02(const float *arr) {
 
 #define AXP(a, b) arr[(a)] * conv_param.p_weight[(b)]
 
-float *ConvCpu01(const float *arr, const ConvParam &conv_param) {
-    auto res = new float [65536]();
-#ifdef ENABLE_OPENMP
+float *ConvCpu01(const float *__restrict__ arr, const ConvParam &conv_param) {
+    auto res = new ALIGN_512 float [65536];
+    std::fill_n(res, 65536, 0);
+#ifdef OPENMP_PARALLEL_FOR
 #pragma omp parallel for
 #endif
     for (int i = 0; i < 16; ++i) {
@@ -92,9 +95,10 @@ float *ConvCpu01(const float *arr, const ConvParam &conv_param) {
     return res;
 }
 
-float *ConvCpu02(const float *arr, const ConvParam &conv_param) {
-    auto res = new float [28800]();
-#ifdef ENABLE_OPENMP
+float *ConvCpu02(const float *__restrict__ arr, const ConvParam &conv_param) {
+    auto res = new ALIGN_512 float [28800];
+    std::fill_n(res, 28800, 0);
+#ifdef OPENMP_PARALLEL_FOR
 #pragma omp parallel for
 #endif
     for (int i = 0; i < 32; ++i) {
@@ -129,9 +133,10 @@ float *ConvCpu02(const float *arr, const ConvParam &conv_param) {
     return res;
 }
 
-float *ConvCpu03(const float *arr, const ConvParam &conv_param) {
-    auto res = new float [2048]();
-#ifdef ENABLE_OPENMP
+float *ConvCpu03(const float *__restrict__ arr, const ConvParam &conv_param) {
+    auto res = new float [2048];
+    std::fill_n(res, 2048, 0);
+#ifdef OPENMP_PARALLEL_FOR
 #pragma omp parallel for
 #endif
     for (int i = 0; i < 32; ++i) {
@@ -166,42 +171,38 @@ float *ConvCpu03(const float *arr, const ConvParam &conv_param) {
     return res;
 }
 
-inline float Max(float a, float b) {
-    return a > b ? a : b;
-}
-
-float *MaxPool01(const float *arr) {
-    auto res = new float [16384];
+float *MaxPool01(const float *__restrict__ arr) {
+    auto res = new ALIGN_512 float [16384];
     int base;
-#ifdef ENABLE_OPENMP
+#ifdef OPENMP_PARALLEL_FOR
 #pragma omp parallel for
 #endif
     for (int i = 0; i < 16; ++i) {
         for (int j = 0; j < 32; ++j) {
             for (int k = 0; k < 32; ++k) {
                 base = i * 4096 + j * 128 + k * 2;
-                res[i * 1024 + j * 32 + k] =
-                        Max(Max(Max(arr[(base)], arr[(base) + 1]),
-                                arr[(base) + 64]), arr[(base) + 65]);
+                res[i * 1024 + j * 32 + k] = std::max({
+                    arr[(base)], arr[(base) + 1], arr[(base) + 64], arr[(base) + 65]
+                });
             }
         }
     }
     return res;
 }
 
-float *MaxPool02(const float *arr) {
-    auto res = new float [7200];
+float *MaxPool02(const float *__restrict__ arr) {
+    auto res = new ALIGN_512 float [7200];
     int base;
-#ifdef ENABLE_OPENMP
+#ifdef OPENMP_PARALLEL_FOR
 #pragma omp parallel for
 #endif
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 15; ++j) {
             for (int k = 0; k < 15; ++k) {
                 base = i * 900 + j * 60 + k * 2;
-                res[i * 225 + j * 15 + k] =
-                        Max(Max(Max(arr[(base)], arr[(base) + 1]),
-                                arr[(base) + 30]), arr[(base) + 31]);
+                res[i * 225 + j * 15 + k] = std::max({
+                    arr[(base)], arr[(base) + 1], arr[(base) + 30], arr[(base) + 31]
+                });
             }
         }
     }
@@ -209,8 +210,12 @@ float *MaxPool02(const float *arr) {
 }
 
 void Relu(float *arr, int length) {
-#ifdef ENABLE_OPENMP
+#if defined(OPENMP_PARALLEL_FOR) && defined(OPENMP_SIMD)
+#pragma omp parallel for simd aligned(arr: 512)
+#elif defined(OPENMP_PARALLEL_FOR)
 #pragma omp parallel for
+#elif defined(OPENMP_SIMD)
+#pragma omp simd aligned(arr: 512)
 #endif
     for (int i = 0; i < length; ++i) {
         if (arr[i] < 0) {
@@ -219,10 +224,10 @@ void Relu(float *arr, int length) {
     }
 }
 
-float DotProduct2048(const float *arr_a, const float *arr_b) {
+float DotProduct2048(const float *__restrict__ arr_a, const float *__restrict__ arr_b) {
     float res = 0;
-#ifdef ENABLE_OPENMP
-#pragma omp simd
+#ifdef OPENMP_SIMD
+#pragma omp simd aligned(arr_a, arr_b: 512)
 #else
 #pragma simd
 #endif
@@ -232,7 +237,7 @@ float DotProduct2048(const float *arr_a, const float *arr_b) {
     return res;
 }
 
-float *FullConnected(float *arr, const FcParam &fc_param) {
+float *FullConnected(float *__restrict__ arr, const FcParam &fc_param) {
     auto res = new float [2];
     res[0] = DotProduct2048(arr, fc_param.p_weight) + fc_param.p_bias[0];
     res[1] = DotProduct2048(arr, &fc_param.p_weight[2048]) + fc_param.p_bias[1];
@@ -240,6 +245,7 @@ float *FullConnected(float *arr, const FcParam &fc_param) {
 }
 
 float SoftMax(const float *arr) {
+    constexpr float kEps = 1e-8;
     float exp0 = std::exp(arr[0]);
     float exp1 = std::exp(arr[1]);
     if (std::isinf(exp0)) {
@@ -247,7 +253,7 @@ float SoftMax(const float *arr) {
     } else if (std::isinf(exp1)) {
         return 1;
     }
-    return (exp1 / (exp0 + exp1));
+    return ((exp1 + kEps) / (exp0 + exp1 + kEps));
 }
 
 float GetScore128x128Rgb(const float *rbg_arr) {

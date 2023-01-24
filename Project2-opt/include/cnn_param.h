@@ -5,6 +5,9 @@
 #ifndef PROJECT2_CNN_PARAM_H
 #define PROJECT2_CNN_PARAM_H
 
+#define ALIGN_512 (std::align_val_t(512))
+#define ALIGN_AS_512 __attribute__((aligned(512)))
+
 struct ConvParam {
     int pad;
     int stride;

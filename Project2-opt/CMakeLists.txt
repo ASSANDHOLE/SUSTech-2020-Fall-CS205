@@ -1,40 +1,37 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.10)
 project(Project2)
 
-set(CMAKE_CXX_STANDARD 14)
+set(TARGET_NAME face_detection)
 
-set(LOCAL_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
-#set(OpenCV_DIR "path/to/opencv") #add if not set in path variables
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+set(CMAKE_CXX_STANDARD 17)
 
 aux_source_directory(${CMAKE_CURRENT_LIST_DIR}/src SRC_FLIES)
 
-IF(SPEED_RUN)
-	add_definitions(-DSPEED_RUN)
-ENDIF()
+add_library(${TARGET_NAME}_lib SHARED ${SRC_FLIES})
+
+add_executable(${TARGET_NAME}_demo demo.cpp speed_tracker.h)
+
+target_include_directories(${TARGET_NAME}_lib PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 find_package(OpenMP)
-IF(OPENMP_FOUND)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OpenMP_SHARED_LINKER_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-    add_definitions(-DENABLE_OPENMP)
+IF(OpenMP_CXX_FOUND)
+    # Enable or disable OpenMP SIMD and parallel for
+    add_definitions(-DOPENMP_SIMD)
+    add_definitions(-DOPENMP_PARALLEL_FOR)
+    target_link_libraries(${TARGET_NAME}_lib PRIVATE OpenMP::OpenMP_CXX)
 ELSE()
     message("Missed OpenMP!")
 ENDIF()
 
-find_package(OpenCV REQUIRED)
+# set(OpenCV_DIR "path/to/opencv") # add if not set in path variables
+find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
 IF(OPENCV_FOUND)
-    include_directories(
-            ${LOCAL_INCLUDE_DIR}
-            ${OpenCV_INCLUDE_DIRS}
-    )
+    target_link_libraries(${TARGET_NAME}_lib PRIVATE opencv_core opencv_highgui opencv_imgproc)
 ELSE()
     message(FATAL_ERROR "Missed OpenCV! CMake will exit")
 ENDIF()
 
-add_executable(${PROJECT_NAME} main.cpp speed_tracker.h ${SRC_FLIES})
+target_link_libraries(${TARGET_NAME}_demo PRIVATE ${TARGET_NAME}_lib)
 
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+# Add an alias lib ${TARGET_NAME}::lib
+add_library(${TARGET_NAME}::lib ALIAS ${TARGET_NAME}_lib)
