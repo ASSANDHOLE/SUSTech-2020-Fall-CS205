@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <filesystem>
-#include <sstream>
+#include <algorithm>
 
 #include <face_detect_cnn.h>
 #include "speed_tracker.h"

@@ -7,6 +7,7 @@
 
 #include <exception>
 #include <tuple>
+#include <string>
 
 #include <cnn_param.h>
 

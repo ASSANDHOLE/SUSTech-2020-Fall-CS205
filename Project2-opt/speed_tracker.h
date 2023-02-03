@@ -7,6 +7,8 @@
 
 #include <chrono>
 #include <iostream>
+#include <cstring>
+#include <sstream>
 
 template<typename T>
 inline std::string RoundTo(T &&val, int precision = 2) {
